@@ -11,9 +11,16 @@ class CamionModel
 
     public function getAll()
     {
-        $sql = "SELECT c.*, tr.nombre AS tipo_residuo_nombre
+        $sql = "SELECT c.*, tr.nombre AS tipo_residuo_nombre,
+                       u_cond.nombre AS conductor_nombre, u_cond.apellido AS conductor_apellido, cond.id_usuario AS id_conductor,
+                       u_peon.nombre AS peon_nombre, u_peon.apellido AS peon_apellido, cond.id_peon,
+                       r.nombre AS ruta_nombre, r.id_ruta
                 FROM camion c
                 LEFT JOIN tipo_residuo tr ON c.id_tipo_residuo = tr.id_tipo_residuo
+                LEFT JOIN conductor cond ON cond.id_camion = c.id_camion
+                LEFT JOIN usuario u_cond ON cond.id_usuario = u_cond.id_usuario
+                LEFT JOIN usuario u_peon ON cond.id_peon = u_peon.id_usuario
+                LEFT JOIN ruta r ON r.id_camion = c.id_camion
                 ORDER BY c.id_camion DESC";
 
         $result = mysqli_query($this->conn, $sql);
@@ -97,6 +104,17 @@ class CamionModel
         }
 
         return ["error" => "No se pudo actualizar el camión"];
+    }
+
+    public function updateEstado($id, $estado)
+    {
+        $stmt = mysqli_prepare($this->conn, "UPDATE camion SET estado = ? WHERE id_camion = ?");
+        mysqli_stmt_bind_param($stmt, "si", $estado, $id);
+
+        if (mysqli_stmt_execute($stmt)) {
+            return ["success" => "Estado del camión actualizado"];
+        }
+        return ["error" => "No se pudo actualizar el estado"];
     }
 
     public function delete($id)

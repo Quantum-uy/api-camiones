@@ -1,6 +1,7 @@
 <?php
 
 require_once 'config.php';
+require_once __DIR__ . '/../auth.php';
 require_once 'controladores/CamionController.php';
 
 $controller = new CamionController($conn);
@@ -27,6 +28,7 @@ switch ($method) {
         $data = json_decode(file_get_contents('php://input'), true);
 
         if ($endpoint === '/camiones') {
+            requiereRol(['administrador']);
             $controller->create($data);
         } else {
             http_response_code(404);
@@ -38,7 +40,20 @@ switch ($method) {
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (preg_match('/^\/camiones\/(\d+)$/', $endpoint, $matches)) {
+            requiereRol(['administrador']);
             $controller->update($matches[1], $data);
+        } else {
+            http_response_code(404);
+            echo json_encode(["error" => "Endpoint no encontrado"]);
+        }
+        break;
+
+    case 'PATCH':
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (preg_match('/^\/camiones\/(\d+)\/estado$/', $endpoint, $matches)) {
+            requiereRol(['administrador', 'conductor']);
+            $controller->updateEstado($matches[1], $data);
         } else {
             http_response_code(404);
             echo json_encode(["error" => "Endpoint no encontrado"]);
@@ -47,6 +62,7 @@ switch ($method) {
 
     case 'DELETE':
         if (preg_match('/^\/camiones\/(\d+)$/', $endpoint, $matches)) {
+            requiereRol(['administrador']);
             $controller->delete($matches[1]);
         } else {
             http_response_code(404);

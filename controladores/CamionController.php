@@ -64,6 +64,20 @@ class CamionController
         echo json_encode($result);
     }
 
+    public function updateEstado($id, $data)
+    {
+        if (empty($data['estado'])) {
+            http_response_code(400);
+            echo json_encode(["error" => "Falta el campo: estado"]);
+            return;
+        }
+        $result = $this->modelo->updateEstado($id, $data['estado']);
+        if (isset($result['error'])) {
+            http_response_code(400);
+        }
+        echo json_encode($result);
+    }
+
     public function delete($id)
     {
         $result = $this->modelo->delete($id);

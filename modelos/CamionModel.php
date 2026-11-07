@@ -12,15 +12,18 @@ class CamionModel
     public function getAll()
     {
         $sql = "SELECT c.*, tr.nombre AS tipo_residuo_nombre,
-                       u_cond.nombre AS conductor_nombre, u_cond.apellido AS conductor_apellido, cond.id_usuario AS id_conductor,
-                       u_peon.nombre AS peon_nombre, u_peon.apellido AS peon_apellido, cond.id_peon,
+                       u_cond.nombre AS conductor_nombre, u_cond.apellido AS conductor_apellido,
+                       COALESCE(r.id_conductor, cond.id_usuario) AS id_conductor,
+                       u_peon.nombre AS peon_nombre, u_peon.apellido AS peon_apellido,
+                       COALESCE(cond_r.id_peon, cond.id_peon) AS id_peon,
                        r.nombre AS ruta_nombre, r.id_ruta
                 FROM camion c
                 LEFT JOIN tipo_residuo tr ON c.id_tipo_residuo = tr.id_tipo_residuo
-                LEFT JOIN conductor cond ON cond.id_camion = c.id_camion
-                LEFT JOIN usuario u_cond ON cond.id_usuario = u_cond.id_usuario
-                LEFT JOIN usuario u_peon ON cond.id_peon = u_peon.id_usuario
                 LEFT JOIN ruta r ON r.id_camion = c.id_camion
+                LEFT JOIN conductor cond ON cond.id_camion = c.id_camion
+                LEFT JOIN conductor cond_r ON cond_r.id_usuario = r.id_conductor
+                LEFT JOIN usuario u_cond ON u_cond.id_usuario = COALESCE(r.id_conductor, cond.id_usuario)
+                LEFT JOIN usuario u_peon ON u_peon.id_usuario = COALESCE(cond_r.id_peon, cond.id_peon)
                 ORDER BY c.id_camion DESC";
 
         $result = mysqli_query($this->conn, $sql);
